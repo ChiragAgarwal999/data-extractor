@@ -25,10 +25,14 @@ def search():
     if not shop or not location:
         flash("Please enter both shop and location.", "error")
         return redirect(url_for("index"))
-
+    
     flash(f"Searching for '{shop}' near '{location}' …", "success")
     file_name = generate_excel(shop, location)
 
+    if not file_name:
+        flash("Data not available")
+        return redirect(url_for("index"))
+    
     # Redirect back to index with file link
     return redirect(url_for("index", file=file_name))
 
@@ -71,13 +75,16 @@ def generate_excel(shop, location):
     df = df[df['Phone'].str.strip() != 'N/A']
     df = df.reset_index(drop=True)
 
-    xlsx_file = f"{shop}_{location}.xlsx"
-    filepath = os.path.join(OUTPUT_FOLDER, xlsx_file)
-    df.to_excel(filepath, index=False)
+    if(len(df) > 1):
+        xlsx_file = f"{shop}_{location}.xlsx"
+        filepath = os.path.join(OUTPUT_FOLDER, xlsx_file)
+        df.to_excel(filepath, index=False)
 
-    print("Data scraping complete and saved.")
+        print("Data scraping complete and saved.")
+        return xlsx_file   # return only file name
+    else:
+        return False
 
-    return xlsx_file   # return only file name
 
 @app.route("/download/<filename>")
 def download_file(filename):

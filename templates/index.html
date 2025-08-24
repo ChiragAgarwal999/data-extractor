@@ -48,7 +48,7 @@
             {% if messages %}
               <div class="mb-4 space-y-2">
                 {% for category, message in messages %}
-                  <div class="rounded-lg border px-4 py-3 text-sm
+                  <div class="flash-message rounded-lg border px-4 py-3 text-sm
                               {% if category == 'error' %} border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300
                               {% elif category == 'success' %} border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300
                               {% else %} border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 {% endif %}">
@@ -60,7 +60,7 @@
           {% endwith %}
 
           <!-- Form -->
-          <form action="{{ url_for('search') }}" method="POST" class="space-y-5">
+          <form id="searchForm" action="{{ url_for('search') }}" method="POST" class="space-y-5">
             <!-- Shop Name -->
             <div>
               <label for="shop" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200">Shop Name</label>
@@ -89,10 +89,10 @@
 
             <!-- Submit -->
             <div class="pt-2">
-              <button type="submit"
+              <button id="searchBtn" type="submit"
                       class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 px-5 py-3 font-semibold text-white shadow-sm shadow-indigo-600/20 ring-1 ring-inset ring-indigo-600/30 hover:from-indigo-500 hover:to-violet-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M21 21a1 1 0 0 1-1.707.707l-5.644-5.644A7.5 7.5 0 1 1 16.5 9a7.466 7.466 0 0 1-1.355 4.268l5.644 5.644A1 1 0 0 1 21 21ZM5 9a4 4 0 1 0 8 0A4 4 0 0 0 5 9Z"/></svg>
-                Search
+                    <span id="searchBtnText">Search</span>
               </button>
             </div>
           </form>
@@ -108,3 +108,29 @@
   </main>
 </body>
 </html>
+
+<script>
+  document.getElementById("searchForm").addEventListener("submit", function() {
+    // remove all existing flash messages before submitting
+    document.querySelectorAll(".flash-message").forEach(el => el.remove());
+  });
+
+  document.getElementById("searchForm").addEventListener("submit", function() {
+    const btn = document.getElementById("searchBtn");
+    const btnText = document.getElementById("searchBtnText");
+
+    // Change text
+    btnText.textContent = "Searching...";
+
+    // Optionally disable button to prevent double clicks
+    btn.disabled = true;
+
+    // Add a spinner (optional)
+    btn.insertAdjacentHTML("afterbegin", `
+      <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+    `);
+  });
+</script>
