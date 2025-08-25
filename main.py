@@ -1,21 +1,18 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import os
+import io   # for in-memory file
 
 app = Flask(__name__)
 app.secret_key = "secret"
 
-OUTPUT_FOLDER = "generated"
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-
 @app.route("/")
 def index():
-    file_url = request.args.get("file")   # pass file name if exists
-    return render_template("index.html", current_year=2025, file_url=file_url)
+    return render_template("index.html", current_year=2025)
 
 @app.route("/search", methods=["POST"])
 def search():
@@ -27,14 +24,20 @@ def search():
         return redirect(url_for("index"))
     
     flash(f"Searching for '{shop}' near '{location}' …", "success")
-    file_name = generate_excel(shop, location)
 
-    if not file_name:
+    excel_file = generate_excel(shop, location)
+
+    if not excel_file:
         flash("Data not available")
         return redirect(url_for("index"))
-    
-    # Redirect back to index with file link
-    return redirect(url_for("index", file=file_name))
+
+    # Return the file directly instead of saving
+    return send_file(
+        excel_file,
+        as_attachment=True,
+        download_name=f"{shop}_{location}.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 def generate_excel(shop, location):
     driver = webdriver.Chrome()
@@ -75,22 +78,16 @@ def generate_excel(shop, location):
     df = df[df['Phone'].str.strip() != 'N/A']
     df = df.reset_index(drop=True)
 
-    if(len(df) > 1):
-        xlsx_file = f"{shop}_{location}.xlsx"
-        filepath = os.path.join(OUTPUT_FOLDER, xlsx_file)
-        df.to_excel(filepath, index=False)
-
-        print("Data scraping complete and saved.")
-        return xlsx_file   # return only file name
+    if len(df) > 1:
+        # Write to BytesIO instead of disk
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False)
+        output.seek(0)
+        return output
     else:
-        return False
+        return None
 
-
-@app.route("/download/<filename>")
-def download_file(filename):
-    return send_from_directory(OUTPUT_FOLDER, filename, as_attachment=True)
-
-# app.run(debug=True)
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))  # Render sets PORT
+    port = int(os.environ.get("PORT", 8080))  # Railway sets PORT
     app.run(host="0.0.0.0", port=port, debug=False)
