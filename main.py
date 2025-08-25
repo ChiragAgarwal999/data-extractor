@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
@@ -40,7 +41,15 @@ def search():
     )
 
 def generate_excel(shop, location):
-    driver = webdriver.Chrome()
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920,1080")
+
+    driver = webdriver.Chrome(options=chrome_options)
+    # driver = webdriver.Chrome()
     cleanData = {"Name": [], "Address": [], "Phone": [], "Location": []}
 
     try:
