@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import os
-import io   # for in-memory file
+from io import BytesIO
 
 app = Flask(__name__)
 app.secret_key = "secret"
@@ -79,10 +79,9 @@ def generate_excel(shop, location):
     df = df.reset_index(drop=True)
 
     if len(df) > 1:
-        # Write to BytesIO instead of disk
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False)
+          # Create Excel in memory
+        output = BytesIO()
+        df.to_excel(output, index=False)
         output.seek(0)
         return output
     else:
