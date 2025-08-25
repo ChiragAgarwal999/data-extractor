@@ -46,6 +46,8 @@ def generate_excel(shop, location):
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    driver.get("https://www.google.com")
+    print("Title:", driver.title)
 
     # driver = webdriver.Chrome()
     cleanData = {"Name": [], "Address": [], "Phone": [], "Location": []}
